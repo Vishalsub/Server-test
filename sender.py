@@ -1,43 +1,52 @@
 import cv2
-from aiortc import MediaStreamTrack, RTCPeerConnection
-from aiortc.contrib.signaling import TcpSocketSignaling
-from aiortc.contrib.media import MediaRelay
-from av import VideoFrame
-import asyncio
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
 
-class CameraStreamTrack(MediaStreamTrack):
-    kind = "video"
+cap = cv2.VideoCapture(0)
 
-    def __init__(self):
-        super().__init__()
-        self.cap = cv2.VideoCapture(0)
+class MJPEGStreamHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path != '/':
+            self.send_error(404)
+            return
 
-    async def recv(self):
-        pts, time_base = await self.next_timestamp()
-        ret, frame = self.cap.read()
-        if not ret:
-            return None
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        new_frame = VideoFrame.from_ndarray(frame, format="rgb24")
-        new_frame.pts = pts
-        new_frame.time_base = time_base
-        return new_frame
+        self.send_response(200)
+        self.send_header(
+            'Content-type',
+            'multipart/x-mixed-replace; boundary=frame'
+        )
+        self.end_headers()
 
-async def run():
-    signaling = TcpSocketSignaling("0.0.0.0", 8765)
-    await signaling.connect()
-    pc = RTCPeerConnection()
-    pc.addTrack(CameraStreamTrack())
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-    offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
-    await signaling.send(pc.localDescription)
+            # Encode frame as JPEG
+            ret, jpeg = cv2.imencode('.jpg', frame)
+            if not ret:
+                continue
 
-    answer = await signaling.receive()
-    await pc.setRemoteDescription(answer)
+            self.wfile.write(b'--frame\r\n')
+            self.send_header('Content-Type', 'image/jpeg')
+            self.send_header('Content-Length', str(len(jpeg)))
+            self.end_headers()
+            self.wfile.write(jpeg.tobytes())
+            self.wfile.write(b'\r\n')
 
-    print("🟢 Streaming started. Press Ctrl+C to stop.")
-    await asyncio.Future()
+def start_server():
+    server = HTTPServer(('0.0.0.0', 8000), MJPEGStreamHandler)
+    print("🚀 MJPEG Stream available at: http://<your-ip>:8000")
+    server.serve_forever()
 
-if __name__ == "__main__":
-    asyncio.run(run())
+if __name__ == '__main__':
+    thread = threading.Thread(target=start_server)
+    thread.daemon = True
+    thread.start()
+
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("🛑 Shutting down")
+        cap.release()
