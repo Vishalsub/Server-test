@@ -1,0 +1,64 @@
+##############################################
+# MoveIt Servo configuration for SO101 (ROS 2)
+# Keyboard / teleop-friendly, streaming to ros2_control JTC
+##############################################
+
+# Timing
+publish_period: 0.01              # 100 Hz command stream
+max_expected_latency: 0.1
+
+# Input command type
+# - "unitless": values in [-1, 1] (e.g., joystick)
+# - "speed_units": SI units (m/s, rad/s) for Twist / JointJog
+command_in_type: "speed_units"
+
+# Scales only used if command_in_type == "unitless" (kept here for easy switching)
+scale:
+  linear: 0.2        # [m/s]
+  rotational: 0.8    # [rad/s]
+  joint: 0.5         # [rad/s]
+
+# Output target (ros2_control JointTrajectoryController)
+command_out_type: trajectory_msgs/JointTrajectory
+publish_joint_positions: true
+publish_joint_velocities: true
+publish_joint_accelerations: false
+
+# Smoothing
+use_smoothing: true
+smoothing_filter_plugin_name: "online_signal_smoothing::AccelerationLimitedPlugin"
+
+# Planning scene ownership
+# Set false if you also run move_group (recommended)
+is_primary_planning_scene_monitor: false
+
+check_octomap_collisions: false
+
+## MoveIt group & frames
+move_group_name: arm
+planning_frame: base_link        # TODO: confirm base frame (e.g., 'base_link')
+ee_frame_name: tool0             # TODO: confirm tool frame (e.g., 'tool0' or 'tcp')
+
+## Singularities & joint-limit buffers
+lower_singularity_threshold: 10.0
+hard_stop_singularity_threshold: 30.0
+leaving_singularity_threshold_multiplier: 2.0
+joint_limit_margins: [0.12]
+
+## Topics
+# Cartesian and joint jog input topics (from your teleop or scripts)
+cartesian_command_in_topic: /servo_server/delta_twist_cmds
+joint_command_in_topic: /servo_server/delta_joint_cmds
+
+# Robot state & status
+joint_topic: /joint_states
+status_topic: /servo_server/status
+
+# Stream JointTrajectory here (ros2_control JTC input)
+command_out_topic: /arm_controller/joint_trajectory
+
+## Collision checking for the whole body
+check_collisions: true
+collision_check_rate: 50.0
+self_collision_proximity_threshold: 0.01
+scene_collision_proximity_threshold: 0.02
