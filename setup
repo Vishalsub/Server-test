@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Exit on errors
+set -e
+
+echo "Starting ROS2 Humble + Gazebo Ignition Fortress installation..."
+
+# ─── Locale Setup ────────────────────────────────────────────────────────────
+echo "[1/9] Setting up locales..."
+sudo apt update && sudo apt install -y locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+locale
+
+# ─── ROS2 Humble Repository ──────────────────────────────────────────────────
+echo "[2/9] Adding ROS2 apt repository..."
+sudo apt install -y software-properties-common curl wget
+sudo add-apt-repository universe
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+    | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# ─── Gazebo Ignition Fortress Repository ─────────────────────────────────────
+# Fortress is the LTS Ignition release paired with ROS2 Humble (Ubuntu 22.04)
+echo "[3/9] Adding Gazebo Ignition Fortress apt repository..."
+sudo wget https://packages.osrfoundation.org/gazebo.gpg \
+    -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
+http://packages.osrfoundation.org/gazebo/ubuntu-stable $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+    | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+
+# ─── System Update ───────────────────────────────────────────────────────────
+echo "[4/9] Updating and upgrading the system..."
+sudo apt update
+sudo apt upgrade -y
+
+# ─── ROS2 Humble ─────────────────────────────────────────────────────────────
+echo "[5/9] Installing ROS2 Humble..."
+sudo apt install -y ros-humble-desktop
+sudo apt install -y ros-dev-tools
+
+# ─── Gazebo Ignition Fortress + ROS2 Bridge ──────────────────────────────────
+echo "[6/9] Installing Gazebo Ignition Fortress and ROS2-GZ bridge..."
+sudo apt install -y gz-fortress
+# ros_gz provides the ROS2↔Gazebo topic/service bridge for Humble+Fortress
+sudo apt install -y ros-humble-ros-gz
+# Convenience simulation packages
+sudo apt install -y \
+    ros-humble-gz-ros2-control \
+    ros-humble-ign-ros2-control || true
+
+# Source ROS2 so subsequent apt installs can resolve ament dependencies
+source /opt/ros/humble/setup.bash
+
+# ─── Python3 and pip ─────────────────────────────────────────────────────────
+echo "[7/9] Installing Python3 pip and packages..."
+sudo apt install -y python3-pip
+pip install pyserial
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+echo "[8/9] Installing Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+rm -f get-docker.sh
+sudo groupadd docker || true
+sudo usermod -aG docker "$USER"
+sg docker "newgrp $(id -gn)" || true
+
+# ─── MoveIt Pro and Additional ROS2 Dependencies ─────────────────────────────
+echo "[9/9] Installing MoveIt Pro and additional dependencies..."
+curl -LJO https://github.com/PickNikRobotics/moveit_pro_deb/raw/main/picknik/moveit-pro-8.10.2-any.deb
+sudo apt install -y ./moveit-pro-8.10.2-any.deb
+rm -f moveit-pro-8.10.2-any.deb
+
+sudo apt-get install -y ros-humble-ament-cmake
+sudo apt install -y libmodbus-dev socat
+
+# ─── Shell Environment ───────────────────────────────────────────────────────
+# Append ROS2 sourcing to .bashrc if not already present
+if ! grep -q "source /opt/ros/humble/setup.bash" "$HOME/.bashrc"; then
+    echo "source /opt/ros/humble/setup.bash" >> "$HOME/.bashrc"
+fi
+
+./ws/system/scripts/protect_params.sh
+
+echo ""
+echo "════════════════════════════════════════════════════════"
+echo " Installation completed successfully!"
+echo " ROS2 Humble  : /opt/ros/humble"
+echo " Gazebo        : Ignition Fortress (gz-fortress)"
+echo " ROS-GZ bridge : ros-humble-ros-gz"
+echo ""
+echo " Run 'source ~/.bashrc' or open a new terminal to apply"
+echo " the ROS2 environment."
+echo "════════════════════════════════════════════════════════"
