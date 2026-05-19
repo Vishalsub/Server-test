@@ -88,3 +88,31 @@ hybrid AMD + NVIDIA system
 👉 This is the correct path:
 
 install CUDA toolkit ONLY (12.5), keep driver as-is
+
+
+. Find where nvcc is installed
+
+Run:
+
+sudo find /usr -name nvcc 2>/dev/null
+
+You will likely see something like:
+
+/usr/local/cuda-12.5/bin/nvcc
+2. Add CUDA to PATH (correct fix)
+
+If your CUDA is in /usr/local/cuda-12.5:
+
+echo 'export PATH=/usr/local/cuda-12.5/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.5/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+source ~/.bashrc
+3. Verify again
+nvcc --version
+
+Expected output:
+
+Cuda compilation tools, release 12.5, V12.5.x
+
+Make CUDA accessible system-wide via symlink:
+
+sudo ln -s /usr/local/cuda-12.5 /usr/local/cuda
