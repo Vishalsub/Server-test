@@ -1,0 +1,100 @@
+When you install PyTorch like this:
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+NVIDIA cuDNN is usually bundled inside PyTorch, so there is often no separate “cuDNN install” to check in the traditional sense.
+
+Instead, you verify it indirectly through PyTorch.
+
+🧠 How to check if cuDNN is working (correct way)
+
+Run Python:
+
+import torch
+
+print("CUDA available:", torch.cuda.is_available())
+print("GPU:", torch.cuda.get_device_name(0))
+print("cuDNN version:", torch.backends.cudnn.version())
+print("cuDNN enabled:", torch.backends.cudnn.enabled)
+🔍 How to interpret results
+✅ Good (cuDNN working)
+
+You should see something like:
+
+CUDA available: True
+GPU name: RTX A400
+cuDNN version: 8902 (or similar)
+cuDNN enabled: True
+❌ If cuDNN is NOT working
+
+You might see:
+
+cuDNN version: None
+or errors like CUDA not available
+
+That means:
+
+wrong PyTorch build
+or broken CUDA environment
+🧠 Important insight (your system)
+
+Because you installed:
+
+CUDA Toolkit 12.5 ✔
+Driver 580 ✔
+PyTorch cu121 build ✔ (after install)
+
+👉 cuDNN will NOT appear as a separate system package
+
+Instead:
+
+It is embedded inside PyTorch’s CUDA runtime.
+
+⚠️ Common misunderstanding
+
+People often try:
+
+dpkg -l | grep cudnn
+
+That only works if you installed system cuDNN manually.
+
+But with modern PyTorch:
+
+❌ No system cuDNN needed
+✔ It lives inside the Python wheel
+
+🚀 Quick full test (recommended)
+
+After installing PyTorch, run:
+
+import torch
+
+x = torch.randn(1000, 1000).cuda()
+y = torch.mm(x, x)
+
+print("GPU computation OK")
+
+If this runs:
+
+CUDA ✔
+cuDNN ✔
+GPU pipeline ✔
+🧭 Bottom line
+
+To check cuDNN:
+
+✔ Don’t look for system packages
+✔ Don’t rely on apt/dpkg
+✔ Use:
+
+torch.backends.cudnn.version()
+
+That is the real indicator in modern AI stacks.
+
+
+hivebotics@hivebotics:~/Documents$ python3 test.py 
+CUDA available: True
+GPU: NVIDIA RTX A400
+cuDNN version: 90100
+cuDNN enabled: True
+
