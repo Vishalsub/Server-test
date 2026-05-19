@@ -1,0 +1,90 @@
+STEP 1 — Remove any broken CUDA repo attempts (if any)
+sudo rm -f /etc/apt/preferences.d/cuda-repository-pin-600
+sudo apt update
+STEP 2 — Add official NVIDIA CUDA repository keyring
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+STEP 3 — Update package list
+sudo apt update
+STEP 4 — Install CUDA TOOLKIT ONLY (NOT driver)
+Recommended (safe for your driver 580):
+sudo apt install -y cuda-toolkit-12-5
+🧠 Why 12.5 (not 12.8)?
+
+Because:
+
+12.8 repos are still too tightly coupled with newer driver stacks
+12.5 is:
+stable
+widely used in ROS2 + robotics
+compatible with modern PyTorch builds
+does NOT require driver downgrade
+🔍 STEP 5 — Verify nvcc
+
+After install:
+
+nvcc --version
+
+Expected output:
+
+CUDA 12.5.x compiler
+🧪 STEP 6 — Verify GPU still intact
+nvidia-smi
+
+Important checks:
+
+Driver still 580.142 ✔
+GPU still detected ✔
+No version downgrade ✔
+⚙️ OPTIONAL: Set environment paths
+
+Add CUDA to PATH:
+
+echo 'export PATH=/usr/local/cuda-12.5/bin:$PATH' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.5/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+source ~/.bashrc
+🤖 What this enables for your robot system
+
+Once nvcc works, you can:
+
+🧠 CUDA development
+custom kernels for vision filtering
+acceleration of perception pipelines
+🤖 ROS2 + GPU
+CUDA-accelerated point cloud processing
+GPU-based image pipelines
+⚡ Real-time robotics
+low-latency image preprocessing
+faster inference pipelines
+🧭 Important reality check
+
+Even after installing CUDA toolkit:
+
+👉 You STILL do NOT need to reinstall:
+
+NVIDIA driver
+X11
+GPU configuration
+
+Your current system remains untouched.
+
+🚨 If anything goes wrong (rollback plan)
+
+If CUDA install breaks something:
+
+sudo apt remove --purge cuda-toolkit-12-5
+sudo apt autoremove
+
+Driver will remain intact.
+
+✔ Final recommendation
+
+Given your setup:
+
+RTX A400
+ROS2 robotics likely
+hybrid AMD + NVIDIA system
+
+👉 This is the correct path:
+
+install CUDA toolkit ONLY (12.5), keep driver as-is

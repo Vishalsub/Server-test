@@ -1,0 +1,186 @@
+CPU iGPU: AMD Radeon 780M (amdgpu) → already working
+dGPU: NVIDIA (PCI 01:00.0, Device 25b2) → currently using nouveau
+Kernel: 6.8 HWE
+OS: Ubuntu 22.04.5
+Wayland session
+Secure Boot: OFF (good — simplifies things a lot)
+
+
+
+1. Remove current NVIDIA + nouveau conflicts
+sudo apt update
+sudo apt purge -y '^nvidia.*' '^libnvidia.*'
+sudo apt autoremove -y
+2. Ensure kernel headers exist (IMPORTANT for DKMS)
+sudo apt install -y linux-headers-$(uname -r)
+3. Install recommended NVIDIA driver (Ubuntu way)
+sudo ubuntu-drivers devices
+
+Then install recommended one automatically:
+
+sudo ubuntu-drivers autoinstall
+
+OR explicitly (recommended for your case):
+
+sudo apt install -y nvidia-driver-550
+4. Reboot
+sudo reboot
+🔍 VERIFY IT WORKS
+
+After reboot:
+
+Check driver is active
+nvidia-smi
+
+You should see:
+
+GPU name
+driver version (550+)
+CUDA version
+Confirm kernel module
+lsmod | grep nvidia
+⚠️ Wayland note (important for you)
+
+You are on Wayland — good news:
+
+With NVIDIA 550:
+
+Wayland works fine (GNOME/Mutter)
+GPU rendering works correctly
+PRIME offloading works
+
+If you ever see glitches:
+
+You can switch session at login:
+“Ubuntu on Xorg” (fallback mode)
+🤖 Robotics / CUDA setup (important for your use case)
+
+After driver install:
+
+sudo apt install -y nvidia-cuda-toolkit
+
+But better (recommended later):
+
+Install CUDA from NVIDIA repo for latest control
+🧩 Hybrid GPU control (AMD + NVIDIA)
+
+To force NVIDIA usage for compute:
+
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia command
+🧯 Common problems (so you don’t get stuck)
+❌ If black screen happens
+
+Boot recovery → run:
+
+sudo prime-select intel
+❌ If nvidia-smi fails
+
+Usually means:KMS build failed
+
+Fix:
+
+sudo dkms status
+🧾 Final recommendation summary
+✔ Install: nvidia-driver-550
+✔ Kernel: keep 6.8 (good)
+✔ Wayland: keep it (works fine now)
+✔ Secure Boot: already disabled → good
+❌ Do NOT use .run installer
+❌ Do NOT stay on nouveau
+
+If you want next step, I can help you set up:
+
+CUDA for robotics (ROS2 / PyTorch / Isaac-style stacks)
+GPU passthrough tuning
+low-latency real-time control setup
+isolating NVIDIA GPU for robot arm compute pipeline
+
+Just tell me what your robot stack looks like.
+
+wrong driver version
+
+
+
+
+🚀 CLEAN INSTALL (correct sequence for your system)
+1. Remove nouveau + old NVIDIA traces
+sudo apt update
+sudo apt purge -y '^nvidia.*' '^libnvidia.*'
+sudo apt autoremove -y
+2. Install kernel headers (important for DKMS)
+sudo apt install -y linux-headers-$(uname -r)
+3. Install correct NVIDIA driver
+Recommended (safe automatic method):
+sudo ubuntu-drivers autoinstall
+OR force best version:
+sudo apt install -y nvidia-driver-550
+4. Reboot
+sudo reboot
+🔍 VERIFY (after reboot)
+Check driver is working
+nvidia-smi
+
+You should see:
+
+RTX A400
+Driver version (550+)
+GPU memory usage
+Check kernel module
+lsmod | grep nvidia
+🤖 CUDA (IMPORTANT for robot arm / AI)
+
+After driver works:
+
+sudo apt install -y nvidia-cuda-toolkit
+
+But better long-term (for robotics / ROS2 / PyTorch):
+
+Install CUDA from NVIDIA official repo later (more up to date)
+⚠️ WAYLAND (you are fine)
+
+You are on Wayland — good:
+
+With NVIDIA 550:
+
+✔ Wayland works
+✔ GPU rendering works
+✔ external monitors ok
+✔ robotics compute unaffected
+
+If issues happen:
+
+fallback login option: “Ubuntu on Xorg”
+🧩 HYBRID GPU NOTE (VERY IMPORTANT)
+
+You also have AMD 780M iGPU.
+
+That means:
+
+AMD = display + light tasks
+NVIDIA A400 = compute / CUDA / robotics
+
+To force NVIDIA usage:
+
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia command
+🧾 FINAL RECOMMENDATION
+
+For your robot arm system:
+
+✔ Install: nvidia-driver-550
+✔ Keep kernel: 6.8 (good choice)
+✔ Use: Wayland (OK)
+✔ Use NVIDIA for: CUDA / AI / control loops
+❌ Do NOT use nouveau
+❌ Do NOT use .run installer
+
+If you want next level setup
+
+I can help you configure:
+
+🤖 ROS2 + CUDA acceleration
+🧠 PyTorch / TensorRT for vision
+🎯 real-time robot control loop (low latency tuning)
+🔌 GPU isolation for robotics node
+📷 camera + AI vision pipeline on A400
+
+Just tell me your robot stack (ROS2? MoveIt? custom Python? Jetson-style pipeline?)
