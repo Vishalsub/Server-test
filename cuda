@@ -116,3 +116,7 @@ Cuda compilation tools, release 12.5, V12.5.x
 Make CUDA accessible system-wide via symlink:
 
 sudo ln -s /usr/local/cuda-12.5 /usr/local/cuda
+
+
+
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
