@@ -63,6 +63,7 @@ info "Setting up main repository..."
 if [ ! -d "$WS_DIR/.git" ]; then
     TEMP_DIR="$HOME/ws_clone_temp"
     git clone --branch "$WS_BRANCH" "$WS_REPO" "$TEMP_DIR"
+    [ -d "$WS_DIR" ] && sudo rm -rf "$WS_DIR"
     sudo mv "$TEMP_DIR" "$WS_DIR"
     sudo chown -R "$USER:$USER" "$WS_DIR"
     success "Repository cloned and moved to $WS_DIR"
@@ -97,6 +98,8 @@ for entry in "${SUBREPOS[@]}"; do
     else
         TEMP_DIR="$HOME/${FOLDER}_clone_temp"
         git clone --branch "$BRANCH" "$REPO" "$TEMP_DIR"
+        # Remove existing empty placeholder dir so mv replaces it, not moves inside it
+        [ -d "$DIR" ] && sudo rm -rf "$DIR"
         sudo mv "$TEMP_DIR" "$DIR"
         sudo chown -R "$USER:$USER" "$DIR"
         success "$FOLDER cloned → $BRANCH"
