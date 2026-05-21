@@ -138,6 +138,9 @@ But better long-term (for robotics / ROS2 / PyTorch):
 Install CUDA from NVIDIA official repo later (more up to date)
 ⚠️ WAYLAND (you are fine)
 
+hivebotics@hivebotics:~$ echo $XDG_SESSION_TYPE
+x11
+
 You are on Wayland — good:
 
 With NVIDIA 550:
